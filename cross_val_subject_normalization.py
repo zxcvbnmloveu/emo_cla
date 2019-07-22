@@ -24,19 +24,6 @@ def cross_validate(X, y, nClasses = 2, feaselect=False):
 
     if feaselect == True:
         X = fisher_idx(X, y)
-        # print(X.shape, y.shape)
-    # #remove nan
-    # d = []
-    # l = []
-    # for i, v in enumerate(X):
-    #     if True in numpy.isnan(v):
-    #         pass
-    #         # print(i,v)
-    #     else:
-    #         l.append(y[i])
-    #         d.append(v)
-    # X = numpy.array(d)
-    # y = numpy.array(l)
 
     model = ('LR', LogisticRegression(solver='liblinear'))
     # models.append(('SVC', SVC()))
@@ -54,7 +41,7 @@ def cross_validate(X, y, nClasses = 2, feaselect=False):
     shuffle_indices = numpy.random.permutation(numpy.arange(len(y)))
     x_shuffled = X[shuffle_indices]  # 将样本和标签打乱
     y_shuffled = y[shuffle_indices]
-    # print(x_shuffled.shape, y_shuffled.shape)
+
     # Cross Validate
     results = []
     names = []
@@ -121,83 +108,6 @@ def cross_validate(X, y, nClasses = 2, feaselect=False):
     # return cv_results.mean()
     return F1Score, accuracy
 
-
-def run():
-    dataFile = './data/matlab.mat'
-    data = scio.loadmat(dataFile)
-
-    features = data['features']
-
-    # print(features.shape)
-    EEG_fea = features[0][0][2].reshape(-1)
-    for i in range(32):
-        for j in range(40):
-            if i is 0 and j is 0:
-                continue
-            # print(EEG_fea.shape)
-            # print(features[i][j][2].reshape(-1).shape)
-            EEG_fea = numpy.vstack((EEG_fea, features[i][j][2].reshape(-1)))
-    print("EEG_fea.shape:" + str(EEG_fea.shape))
-
-    EMG_fea = features[0][0][0].reshape(-1)
-    for i in range(32):
-        for j in range(40):
-            if i is 0 and j is 0:
-                continue
-            # print(EEG_fea.shape)
-            # print(features[i][j][0].reshape(-1).shape)
-            EMG_fea = numpy.vstack((EMG_fea, features[i][j][0].reshape(-1)))
-    print("EMG_fea.shape:" + str(EMG_fea.shape))
-
-    GSR_fea = features[0][0][4].reshape(-1)
-    for i in range(32):
-        for j in range(40):
-            if i is 0 and j is 0:
-                continue
-            # print(EEG_fea.shape)
-            # print(features[i][j][0].reshape(-1).shape)
-            GSR_fea = numpy.vstack((GSR_fea, features[i][j][4].reshape(-1)))
-    print("GSR_fea.shape:" + str(GSR_fea.shape))
-
-    BVP_fea = features[0][0][6].reshape(-1)
-    for i in range(32):
-        for j in range(40):
-            if i is 0 and j is 0:
-                continue
-            # print(EEG_fea.shape)
-            # print(features[i][j][0].reshape(-1).shape)
-            BVP_fea = numpy.vstack((BVP_fea, features[i][j][6].reshape(-1)))
-    print("BVP_fea.shape:" + str(BVP_fea.shape))
-
-    RES_fea = features[0][0][8].reshape(-1)
-    for i in range(32):
-        for j in range(40):
-            if i is 0 and j is 0:
-                continue
-            RES_fea = numpy.vstack((RES_fea, features[i][j][8].reshape(-1)))
-    print("RES_fea.shape:" + str(RES_fea.shape))
-
-    peripheral_fea = numpy.hstack((EMG_fea, GSR_fea, RES_fea, BVP_fea[:, :-4]))
-    # print("peripheral_fea.shape:" + str(peripheral_fea.shape))
-    all_fea = numpy.hstack((EEG_fea, peripheral_fea))
-
-    # print("all_fea.shape:" + str(all_fea.shape))
-    # print("BVP_fea")
-    # run_fea(BVP_fea[:,:-4], feaselect=True)
-    # print("GSR_fea")
-    # run_fea(GSR_fea, feaselect=True)
-    # print("RES_fea")
-    # run_fea(RES_fea, feaselect=True)
-    # print("EMG_fea")
-    # run_fea(EMG_fea, feaselect=True)
-    # print("EEG_fea")
-    # run_fea(EEG_fea, feaselect=True)
-    # print("peripheral_fea")
-    run_fea(peripheral_fea, feaselect=True)
-    # print("all_fea")
-    # run_fea(all_fea, feaselect=True)
-
-
 def fisher_idx(features, labels):
     ''' Get idx sorted by fisher linear discriminant '''
     labels = np.array(labels)
@@ -226,13 +136,12 @@ def fisher_idx(features, labels):
     return features[:, feature_idx].reshape((features.shape[0], -1))
 
 
-def run_fea(file_x, feaselect=False):
+def run_fea(file_x, file_y, feaselect=False):
     print("2class:")
     file_y1 = './data/label_class_0.dat'
     file_y2 = './data/label_class_1.dat'
     file_y1 = numpy.genfromtxt(file_y1, delimiter=' ')
     file_y2 = numpy.genfromtxt(file_y2, delimiter=' ')
-
     f1_result_a = []
     f1_result_v = []
     accuracy_result_a = []
@@ -262,9 +171,22 @@ def run_fea(file_x, feaselect=False):
     print("f1 Average acc:%f（%f）" % (np.mean(f1_result_v), np.std(f1_result_v)))
     print("accuracy Average acc:%f（%f）" % (np.mean(accuracy_result_v), np.std(accuracy_result_v)))
 
-
+def delete_NAN(file_x):
+    min = np.min(file_x, axis=0)
+    delete_idx = np.isnan(min)
+    file_x_new = file_x[:, ~delete_idx]
+    # print(file_x_new.shape)
+    # print(file_x.shape)
+    return file_x_new
 
 if __name__ == '__main__':
-    run()
+    # read data
+    EEG_fea = np.load('./data/EEG_fea.npy')
+    Peri_fea = np.load('./data/Peri_fea.npy')
+    label_v = np.load('./data/label_v.npy')
+    label_a = np.load(('./data/label_a.npy'))
+
+    # delete NAN
+    delete_NAN(Peri_fea)
 
 

@@ -56,27 +56,27 @@ def cross_validate0(file_x, file_y):
     names = []
     timer = []
     print('Model | Mean of CV | Std. Dev. of CV | Time')
-    for name, model in models:
-        start_time = time.time()
-        kfold = model_selection.KFold(n_splits=33, random_state=numpy.random.randint(1,100))
-        cv_results = model_selection.cross_val_score(model, x_shuffled, y_shuffled, cv=kfold, scoring=scoring)
-        t = (time.time() - start_time)
-        timer.append(t)
-        results.append(cv_results)
-        names.append(name)
-        msg = "%s: %f (%f) %f s" % (name, cv_results.mean(), cv_results.std(), t)
-        print(msg)
-
-    #留一法验证
-    # loo=LeaveOneOut()
     # for name, model in models:
     #     start_time = time.time()
-    #     # [:,(25, 90, 91)]
-    #     cv_results = model_selection.cross_val_score(model, x_shuffled, y_shuffled, cv=loo, scoring=scoring)
-    #     names.append(name)
+    #     kfold = model_selection.KFold(n_splits=33, random_state=numpy.random.randint(1,100))
+    #     cv_results = model_selection.cross_val_score(model, x_shuffled, y_shuffled, cv=kfold, scoring=scoring)
     #     t = (time.time() - start_time)
+    #     timer.append(t)
+    #     results.append(cv_results)
+    #     names.append(name)
     #     msg = "%s: %f (%f) %f s" % (name, cv_results.mean(), cv_results.std(), t)
     #     print(msg)
+
+    #留一法验证
+    loo=LeaveOneOut()
+    for name, model in models:
+        start_time = time.time()
+        # [:,(25, 90, 91)]
+        cv_results = model_selection.cross_val_score(model, x_shuffled, y_shuffled, cv=loo, scoring=scoring)
+        names.append(name)
+        t = (time.time() - start_time)
+        msg = "%s: %f (%f) %f s" % (name, cv_results.mean(), cv_results.std(), t)
+        print(msg)
 
 def run():
     print("2class:")
