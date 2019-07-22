@@ -17,71 +17,12 @@ from sklearn.tree import DecisionTreeClassifier
 
 warnings.filterwarnings(action="ignore")
 
-
-def cross_validate(X, y, nClasses = 2):
-    # X = numpy.genfromtxt(file_x, delimiter=' ')
-    X = StandardScaler().fit_transform(X)
-
-    model = ('LR', LogisticRegression(solver='liblinear'))
-    # models.append(('SVC', SVC()))
-    # models.append(('KNN', KNeighborsClassifier()))
-    # models.append(('DT', DecisionTreeClassifier()))
-    # models.append((
-    # 'RF', RandomForestClassifier(n_estimators=100, oob_score=True, random_state=123456, criterion='entropy')))
-
-    # Split the data into training/testing sets
-    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=43)
-
-    numpy.random.seed(9)
-    shuffle_indices = numpy.random.permutation(numpy.arange(len(y)))
-    x_shuffled = X[shuffle_indices]  # 将样本和标签打乱
-    y_shuffled = y[shuffle_indices]
-
-    names = []
-    start_time = time.time()
-
-    y_pred = []
-    y_true = []
-    for i in range(40):
-        test_x = []
-        test_y = []
-        train_x = []
-        train_y = []
-        for j in range(40):
-            if j == i:
-                test_x.append(x_shuffled[j])
-                test_y.append(y_shuffled[j])
-            else:
-                train_x.append(x_shuffled[j])
-                train_y.append(y_shuffled[j])
-        model[1].fit(train_x,train_y)
-        y_pred.append(model[1].predict(test_x))
-        y_true.append(test_y)
-    # print(results)
-    F1Score = []
-    for i in range(nClasses):
-        # true positive
-        TP = np.sum(np.logical_and(np.equal(y_true, i), np.equal(y_pred, i)))
-        # false positive
-        FP = np.sum(np.logical_and(np.not_equal(y_true, i), np.equal(y_pred, i)))
-        # true negative
-        TN = np.sum(np.logical_and(np.not_equal(y_true, i), np.not_equal(y_pred, i)))
-        # false negative
-        FN = np.sum(np.logical_and(np.equal(y_true, i), np.not_equal(y_pred, i)))
-        precision = TP / (TP + FP)
-        recall = TP / (TP + FN)
-        F1Score.append(2 * precision * recall / (precision + recall))
-
-    F1Score = np.nan_to_num(F1Score).mean()
-    accuracy = (TP + FP)/len(y_true)
-    names.append(model[0])
-    t = (time.time() - start_time)
-    # msg = "%s: %f (%f) %f s" % (model[0], cv_results.mean(), cv_results.std(), t)
-    # print(msg)
-    return F1Score, accuracy
-
 def fisher_idx(features, labels):
-    ''' Get idx sorted by fisher linear discriminant '''
+    ''' Get idx sorted by fisher linear discriminant
+        :param train data with shape: sample_num,fea_num
+        :param train label
+        :return select index 3
+    '''
     labels = np.array(labels)
     labels0 = np.where(labels < 1)
     labels1 = np.where(labels > 0)
@@ -104,44 +45,8 @@ def fisher_idx(features, labels):
     fisher_threshold = 0.3
     feature_idx = np.where(fisher > fisher_threshold)
     if (features[:, feature_idx].shape[2] < 3):
-        return features[:, sorted_feature_idx[:3]]
-    return features[:, feature_idx].reshape((features.shape[0], -1))
-
-
-def run_fea(file_x, file_y, feaselect=False):
-    print("2class:")
-    file_y1 = './data/label_class_0.dat'
-    file_y2 = './data/label_class_1.dat'
-    file_y1 = numpy.genfromtxt(file_y1, delimiter=' ')
-    file_y2 = numpy.genfromtxt(file_y2, delimiter=' ')
-    f1_result_a = []
-    f1_result_v = []
-    accuracy_result_a = []
-    accuracy_result_v = []
-    print("Valence")
-    for i in range(32):
-        X = file_x[40*i:40*(i+1), :]
-        y = file_y1[40*i:40*(i+1)]
-        # print(' subject%d'%(i+1), end=' ')
-        f1_result,accuracy_result = cross_validate(X, y, feaselect=feaselect)
-        if f1_result is not -1:
-            f1_result_a.append(f1_result)
-        if accuracy_result is not -1:
-            accuracy_result_a.append(accuracy_result)
-    print("f1 Average acc:%f（%f）"%(np.mean(f1_result_a),np.std(f1_result_a)))
-    print("accuracy Average acc:%f（%f）" % (np.mean(accuracy_result_a), np.std(accuracy_result_a)))
-    print("Arousal")
-    for i in range(32):
-        X = file_x[40 * i:40 * (i + 1), :]
-        y = file_y2[40 * i:40 * (i + 1)]
-        # print(' subject%d' % (i + 1), end=' ')
-        f1_result,accuracy_result =  cross_validate(X, y, feaselect=feaselect)
-        if f1_result is not -1:
-            f1_result_v.append(f1_result)
-        if accuracy_result is not -1:
-            accuracy_result_v.append(accuracy_result)
-    print("f1 Average acc:%f（%f）" % (np.mean(f1_result_v), np.std(f1_result_v)))
-    print("accuracy Average acc:%f（%f）" % (np.mean(accuracy_result_v), np.std(accuracy_result_v)))
+        return sorted_feature_idx[:3]
+    return feature_idx
 
 def delete_NAN(file_x):
     '''
@@ -156,19 +61,71 @@ def delete_NAN(file_x):
 
 def normalization_binary(file_x):
     '''
-    将每个subject的特征按median进行二进制normalization（大于为1，小于为1）
+    将file_x特征按median进行二进制normalization（大于为1，小于为1）
     :param filex for one subject
     :return normalization_data
     '''
-    file_x_new = file_x
-    median = file_x.median(axis=0)
+    file_x_new = file_x.copy()
+    median = np.median(file_x,axis=0)
     for i in range(file_x.shape[1]):
         file_x_new[:, i] = np.where(file_x[:, i] < median[i], 0, 1)
     return file_x_new
 
-def inter_model_eval(file_x, file_y):
+def nor_subject(file_x):
+    '''
+        将每个subject的特征按median进行二进制normalization（大于为1，小于为1）
+        :param file_x
+        :return normalization_data
+    '''
+    file_x_new = file_x.copy()
     for i in range(32):
-        file_x
+        file_x_new[40 * i: 40 * (i + 1),:] = normalization_binary(file_x[40 * i: 40 * (i + 1),:])
+    return file_x_new
+
+def inter_model_eval(file_x, file_y, nClasses = 2):
+
+    # model = LogisticRegression(solver='liblinear')
+    model = KNeighborsClassifier()
+    F1s =[]
+    ACCs = []
+
+    for i in range(32):
+        test_idx = [i for i in range(40 * i, 40 * (i + 1))]
+        train_idx = [i for i in range(1280) if i not in test_idx]
+        test_data = file_x[test_idx, :]
+        train_data = file_x[train_idx, :]
+        test_label = file_y[test_idx]
+        train_label = file_y[train_idx]
+
+        numpy.random.seed(9)
+        shuffle_indices = numpy.random.permutation(numpy.arange(len(train_data)))
+        train_data = train_data[shuffle_indices]  # 将样本和标签打乱
+        train_label = train_label[shuffle_indices]
+
+        model.fit(train_data,train_label)
+        y_pred = model.predict(test_data)
+        F1Score = []
+        for j in range(nClasses):
+            # true positive
+            TP = np.sum(np.logical_and(np.equal(test_label, j), np.equal(y_pred, j)))
+            # false positive
+            FP = np.sum(np.logical_and(np.not_equal(test_label, j), np.equal(y_pred, j)))
+            # true negative
+            TN = np.sum(np.logical_and(np.not_equal(test_label, j), np.not_equal(y_pred, j)))
+            # false negative
+            FN = np.sum(np.logical_and(np.equal(test_label, j), np.not_equal(y_pred, j)))
+            precision = TP / (TP + FP)
+            recall = TP / (TP + FN)
+            F1Score.append(2 * precision * recall / (precision + recall))
+        F1Score = np.nan_to_num(F1Score).mean()
+        accuracy = (TP + FP) / len(test_label)
+        print("test on subject%d, F1: %f, ACC: %f"% (i, F1Score, accuracy))
+        F1s.append(F1Score)
+        ACCs.append(accuracy)
+
+    print("average score, F1: %f, ACC: %f" % (np.mean(F1s), np.mean(ACCs)))
+
+
 
 if __name__ == '__main__':
     # read data
@@ -178,6 +135,16 @@ if __name__ == '__main__':
     label_a = np.load(('./data/label_a.npy'))
 
     # delete NAN
-    delete_NAN(Peri_fea)
+    Peri_fea = delete_NAN(Peri_fea)
+
+    # normalize each subject
+    data = nor_subject(EEG_fea)
+    print(EEG_fea)
+    print(data)
+    #test
+    # inter_model_eval(EEG_fea, label_a)
+    # inter_model_eval(EEG_fea, label_v)
+    # inter_model_eval(data, label_a)
+
 
 
