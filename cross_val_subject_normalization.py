@@ -18,12 +18,9 @@ from sklearn.tree import DecisionTreeClassifier
 warnings.filterwarnings(action="ignore")
 
 
-def cross_validate(X, y, nClasses = 2, feaselect=False):
+def cross_validate(X, y, nClasses = 2):
     # X = numpy.genfromtxt(file_x, delimiter=' ')
     X = StandardScaler().fit_transform(X)
-
-    if feaselect == True:
-        X = fisher_idx(X, y)
 
     model = ('LR', LogisticRegression(solver='liblinear'))
     # models.append(('SVC', SVC()))
@@ -31,8 +28,6 @@ def cross_validate(X, y, nClasses = 2, feaselect=False):
     # models.append(('DT', DecisionTreeClassifier()))
     # models.append((
     # 'RF', RandomForestClassifier(n_estimators=100, oob_score=True, random_state=123456, criterion='entropy')))
-    scoring = 'accuracy'
-    # scoring = 'f1'
 
     # Split the data into training/testing sets
     # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=43)
@@ -42,30 +37,8 @@ def cross_validate(X, y, nClasses = 2, feaselect=False):
     x_shuffled = X[shuffle_indices]  # 将样本和标签打乱
     y_shuffled = y[shuffle_indices]
 
-    # Cross Validate
-    results = []
     names = []
-    timer = []
-    # print('Model | Mean of CV | Std. Dev. of CV | Time')
-    # for name, model in models:
-    #     start_time = time.time()
-    #     kfold = model_selection.KFold(n_splits=33, random_state=numpy.random.randint(1,100))
-    #     cv_results = model_selection.cross_val_score(model, x_shuffled, y_shuffled, cv=kfold, scoring=scoring)
-    #     t = (time.time() - start_time)
-    #     timer.append(t)
-    #     results.append(cv_results)
-    #     names.append(name)
-    #     msg = "%s: %f (%f) %f s" % (name, cv_results.mean(), cv_results.std(), t)
-    #     print(msg)
-
-    # 留一法验证
-    loo = LeaveOneOut()
     start_time = time.time()
-    # [:,(25, 90, 91)]
-    if(x_shuffled.shape[0] == 0):
-        print(x_shuffled.shape[0])
-        return -1
-    cv_results = model_selection.cross_val_score(model[1], x_shuffled, y_shuffled, cv=loo, scoring=scoring)
 
     y_pred = []
     y_true = []
@@ -105,7 +78,6 @@ def cross_validate(X, y, nClasses = 2, feaselect=False):
     t = (time.time() - start_time)
     # msg = "%s: %f (%f) %f s" % (model[0], cv_results.mean(), cv_results.std(), t)
     # print(msg)
-    # return cv_results.mean()
     return F1Score, accuracy
 
 def fisher_idx(features, labels):
@@ -172,12 +144,31 @@ def run_fea(file_x, file_y, feaselect=False):
     print("accuracy Average acc:%f（%f）" % (np.mean(accuracy_result_v), np.std(accuracy_result_v)))
 
 def delete_NAN(file_x):
+    '''
+    delete NAN features
+    :param data
+    :return processed data
+    '''
     min = np.min(file_x, axis=0)
     delete_idx = np.isnan(min)
     file_x_new = file_x[:, ~delete_idx]
-    # print(file_x_new.shape)
-    # print(file_x.shape)
     return file_x_new
+
+def normalization_binary(file_x):
+    '''
+    将每个subject的特征按median进行二进制normalization（大于为1，小于为1）
+    :param filex for one subject
+    :return normalization_data
+    '''
+    file_x_new = file_x
+    median = file_x.median(axis=0)
+    for i in range(file_x.shape[1]):
+        file_x_new[:, i] = np.where(file_x[:, i] < median[i], 0, 1)
+    return file_x_new
+
+def inter_model_eval(file_x, file_y):
+    for i in range(32):
+        file_x
 
 if __name__ == '__main__':
     # read data
