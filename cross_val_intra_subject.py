@@ -21,7 +21,6 @@ warnings.filterwarnings(action="ignore")
 def cross_validate(X, y, nClasses = 2, feaselect=False):
     # X = numpy.genfromtxt(file_x, delimiter=' ')
     X = StandardScaler().fit_transform(X)
-
     if feaselect == True:
         X = fisher_idx(X, y)
         # print(X.shape, y.shape)
@@ -78,8 +77,6 @@ def cross_validate(X, y, nClasses = 2, feaselect=False):
     if(x_shuffled.shape[0] == 0):
         print(x_shuffled.shape[0])
         return -1
-    cv_results = model_selection.cross_val_score(model[1], x_shuffled, y_shuffled, cv=loo, scoring=scoring)
-
     y_pred = []
     y_true = []
     for i in range(40):
@@ -94,6 +91,7 @@ def cross_validate(X, y, nClasses = 2, feaselect=False):
             else:
                 train_x.append(x_shuffled[j])
                 train_y.append(y_shuffled[j])
+        # print(np.array(train_x).shape, np.array(train_y).shape)
         model[1].fit(train_x,train_y)
         y_pred.append(model[1].predict(test_x))
         y_true.append(test_y)
@@ -113,7 +111,7 @@ def cross_validate(X, y, nClasses = 2, feaselect=False):
         F1Score.append(2 * precision * recall / (precision + recall))
 
     F1Score = np.nan_to_num(F1Score).mean()
-    accuracy = (TP + FP)/len(y_true)
+    accuracy = np.sum(np.equal(y_pred, y_true))/len(y_true)
     names.append(model[0])
     t = (time.time() - start_time)
     # msg = "%s: %f (%f) %f s" % (model[0], cv_results.mean(), cv_results.std(), t)
@@ -190,13 +188,12 @@ def run():
     # run_fea(RES_fea, feaselect=True)
     # print("EMG_fea")
     # run_fea(EMG_fea, feaselect=True)
-    # print("EEG_fea")
-    # run_fea(EEG_fea, feaselect=True)
-    # print("peripheral_fea")
+    print("EEG_fea")
+    run_fea(EEG_fea, feaselect=True)
+    print("peripheral_fea")
     run_fea(peripheral_fea, feaselect=True)
     # print("all_fea")
     # run_fea(all_fea, feaselect=True)
-
 
 def fisher_idx(features, labels):
     ''' Get idx sorted by fisher linear discriminant '''
@@ -261,8 +258,6 @@ def run_fea(file_x, feaselect=False):
             accuracy_result_v.append(accuracy_result)
     print("f1 Average acc:%f（%f）" % (np.mean(f1_result_v), np.std(f1_result_v)))
     print("accuracy Average acc:%f（%f）" % (np.mean(accuracy_result_v), np.std(accuracy_result_v)))
-
-
 
 if __name__ == '__main__':
     run()

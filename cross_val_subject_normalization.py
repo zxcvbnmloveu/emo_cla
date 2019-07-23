@@ -12,6 +12,7 @@ import numpy
 from sklearn import model_selection
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
+from sklearn.svm import LinearSVC
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 
@@ -83,9 +84,15 @@ def nor_subject(file_x):
     return file_x_new
 
 def inter_model_eval(file_x, file_y, nClasses = 2):
-
+    '''
+    :param file_x: input data
+    :param file_y: label
+    :param nClasses: label class
+    :return: average F1,ACC
+    '''
     # model = LogisticRegression(solver='liblinear')
-    model = KNeighborsClassifier()
+    # model = KNeighborsClassifier()
+    model = LinearSVC(random_state=0, tol=1e-5)
     F1s =[]
     ACCs = []
 
@@ -118,13 +125,13 @@ def inter_model_eval(file_x, file_y, nClasses = 2):
             recall = TP / (TP + FN)
             F1Score.append(2 * precision * recall / (precision + recall))
         F1Score = np.nan_to_num(F1Score).mean()
-        accuracy = (TP + FP) / len(test_label)
-        print("test on subject%d, F1: %f, ACC: %f"% (i, F1Score, accuracy))
+        accuracy = np.sum(np.equal(y_pred, test_label))/len(test_data)
+        # print("test on subject%d, F1: %f, ACC: %f"% (i, F1Score, accuracy))
         F1s.append(F1Score)
         ACCs.append(accuracy)
 
     print("average score, F1: %f, ACC: %f" % (np.mean(F1s), np.mean(ACCs)))
-
+    return np.mean(F1s), np.mean(ACCs)
 
 
 if __name__ == '__main__':
@@ -138,13 +145,18 @@ if __name__ == '__main__':
     Peri_fea = delete_NAN(Peri_fea)
 
     # normalize each subject
-    data = nor_subject(EEG_fea)
-    print(EEG_fea)
-    print(data)
+    EEG_data = nor_subject(EEG_fea)
+    Peri_data = nor_subject(Peri_fea)
+
     #test
-    # inter_model_eval(EEG_fea, label_a)
-    # inter_model_eval(EEG_fea, label_v)
-    # inter_model_eval(data, label_a)
+    inter_model_eval(EEG_fea, label_a)
+    inter_model_eval(EEG_data, label_a)
+    inter_model_eval(EEG_fea, label_v)
+    inter_model_eval(EEG_data, label_v)
+    inter_model_eval(Peri_fea, label_a)
+    inter_model_eval(Peri_data, label_a)
+    inter_model_eval(Peri_fea, label_v)
+    inter_model_eval(Peri_data, label_v)
 
 
 
