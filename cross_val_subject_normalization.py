@@ -1,6 +1,7 @@
 import warnings
 
 import numpy as np
+import pysnooper
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import LeaveOneOut
@@ -8,8 +9,8 @@ from sklearn.preprocessing import StandardScaler
 import time
 import scipy.io as scio
 import numpy
-
 from sklearn import model_selection
+from sklearn.metrics import f1_score,accuracy_score
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.svm import LinearSVC
@@ -91,8 +92,8 @@ def inter_model_eval(file_x, file_y, nClasses = 2):
     :return: average F1,ACC
     '''
     # model = LogisticRegression(solver='liblinear')
-    # model = KNeighborsClassifier()
-    model = LinearSVC(random_state=0, tol=1e-5)
+    model = KNeighborsClassifier()
+    # model = LinearSVC(random_state=0, tol=1e-5)
     F1s =[]
     ACCs = []
 
@@ -111,24 +112,27 @@ def inter_model_eval(file_x, file_y, nClasses = 2):
 
         model.fit(train_data,train_label)
         y_pred = model.predict(test_data)
-        F1Score = []
-        for j in range(nClasses):
-            # true positive
-            TP = np.sum(np.logical_and(np.equal(test_label, j), np.equal(y_pred, j)))
-            # false positive
-            FP = np.sum(np.logical_and(np.not_equal(test_label, j), np.equal(y_pred, j)))
-            # true negative
-            TN = np.sum(np.logical_and(np.not_equal(test_label, j), np.not_equal(y_pred, j)))
-            # false negative
-            FN = np.sum(np.logical_and(np.equal(test_label, j), np.not_equal(y_pred, j)))
-            precision = TP / (TP + FP)
-            recall = TP / (TP + FN)
-            F1Score.append(2 * precision * recall / (precision + recall))
-        F1Score = np.nan_to_num(F1Score).mean()
-        accuracy = np.sum(np.equal(y_pred, test_label))/len(test_data)
+        # F1Score = []
+        # for j in range(nClasses):
+        #     # true positive
+        #     TP = np.sum(np.logical_and(np.equal(test_label, j), np.equal(y_pred, j)))
+        #     # false positive
+        #     FP = np.sum(np.logical_and(np.not_equal(test_label, j), np.equal(y_pred, j)))
+        #     # true negative
+        #     TN = np.sum(np.logical_and(np.not_equal(test_label, j), np.not_equal(y_pred, j)))
+        #     # false negative
+        #     FN = np.sum(np.logical_and(np.equal(test_label, j), np.not_equal(y_pred, j)))
+        #     precision = TP / (TP + FP)
+        #     recall = TP / (TP + FN)
+        #     F1Score.append(2 * precision * recall / (precision + recall))
+        # F1Score = np.nan_to_num(F1Score).mean()
+        F1Score2 = f1_score(test_label,y_pred,labels=[0,1],average='macro') #计算各类的TP再算平均值
+        # F1Score3 = f1_score(test_label,y_pred, labels=[0,1],average='micro') #计算总体的TP
+        # accuracy = np.sum(np.equal(y_pred, test_label))/len(test_data)
+        accuracy2 = accuracy_score(y_pred, test_label)
         # print("test on subject%d, F1: %f, ACC: %f"% (i, F1Score, accuracy))
-        F1s.append(F1Score)
-        ACCs.append(accuracy)
+        F1s.append(F1Score2)
+        ACCs.append(accuracy2)
 
     print("average score, F1: %f, ACC: %f" % (np.mean(F1s), np.mean(ACCs)))
     return np.mean(F1s), np.mean(ACCs)
