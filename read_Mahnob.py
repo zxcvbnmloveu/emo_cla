@@ -3,7 +3,7 @@ import scipy.io as scio
 
 
 def run():
-    dataFile = 'mahnob_features.mat'
+    dataFile = './data/mahnob_features.mat'
     data = scio.loadmat(dataFile)
 
     features = data['features']
@@ -95,10 +95,14 @@ def run():
                 RES_fea = np.vstack((RES_fea, np.ones(tmp_shape)))
     print("RES_fea.shape:" + str(RES_fea.shape))
 
-    # peripheral_fea = np.hstack((ECG_fea, GSR_fea, RES_fea, HST_fea[:, :-4]))
-    # print("peripheral_fea.shape:" + str(peripheral_fea.shape))
-    # all_fea = np.hstack((EEG_fea, peripheral_fea))
 
+    peripheral_fea = np.hstack((ECG_fea, GSR_fea, RES_fea, HST_fea))
+    print("peripheral_fea.shape:" + str(peripheral_fea.shape))
+    # all_fea = np.hstack((EEG_fea, peripheral_fea))
+    np.save('./data/EEG_fea_MAHNOB', EEG_fea)
+    np.save('./data/Peri_fea_MAHNOB', peripheral_fea)
+    np.save('./data/label_a_MAHNOB', label_arousal)
+    np.save('./data/label_v_MAHNOB', label_valence)
 
 if __name__ == '__main__':
     run()
