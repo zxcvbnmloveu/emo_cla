@@ -64,7 +64,7 @@ def delete_NAN(file_x):
 def normalization_binary(file_x):
     '''
     将file_x特征按median进行二进制normalization（大于为1，小于为1）
-    :param filex for one subject
+    :param filex
     :return normalization_data
     '''
     file_x_new = file_x.copy()
@@ -72,6 +72,15 @@ def normalization_binary(file_x):
     for i in range(file_x.shape[1]):
         file_x_new[:, i] = np.where(file_x[:, i] < median[i], 0, 1)
     return file_x_new
+
+def normalization_zscore(file_x):
+    '''
+    将file_x特征按median进行zscore normalization
+    :param filex
+    :return normalization_data
+    '''
+    file_x_new = file_x.copy()
+    return StandardScaler().fit_transform(file_x_new)
 
 def nor_subject(file_x):
     '''
@@ -140,27 +149,23 @@ def inter_model_eval(file_x, file_y, nClasses = 2):
 
 if __name__ == '__main__':
     # read data
-    EEG_fea = np.load('./data/EEG_fea.npy')
-    Peri_fea = np.load('./data/Peri_fea.npy')
-    label_v = np.load('./data/label_v.npy')
-    label_a = np.load(('./data/label_a.npy'))
+    EEG_fea = np.load('./data/EEG_fea_MAHNOB.npy')
+    Peri_fea = np.load('./data/Peri_fea_MAHNOB.npy')
+    label_v = np.load('./data/label_v_MAHNOB.npy')
+    label_a = np.load(('./data/label_a_MAHNOB.npy'))
 
     # delete NAN
     Peri_fea = delete_NAN(Peri_fea)
 
     # normalize each subject
-    EEG_data = nor_subject(EEG_fea)
-    Peri_data = nor_subject(Peri_fea)
+    EEG_data = normalization_zscore(EEG_fea)
+    Peri_data = normalization_zscore(Peri_fea)
 
     #test
     inter_model_eval(EEG_fea, label_a)
-    inter_model_eval(EEG_data, label_a)
     inter_model_eval(EEG_fea, label_v)
-    inter_model_eval(EEG_data, label_v)
     inter_model_eval(Peri_fea, label_a)
-    inter_model_eval(Peri_data, label_a)
     inter_model_eval(Peri_fea, label_v)
-    inter_model_eval(Peri_data, label_v)
 
 
 
