@@ -19,19 +19,20 @@ from sklearn.tree import DecisionTreeClassifier
 
 warnings.filterwarnings(action="ignore")
 
-def fisher_idx(features, labels):
+def fisher_idx(train_features, train_labels, test_features):
     ''' Get idx sorted by fisher linear discriminant
         :param train data with shape: sample_num,fea_num
         :param train label
+        :param test_features
         :return select index 3
     '''
-    labels = np.array(labels)
+    labels = np.array(train_labels)
     labels0 = np.where(labels < 1)
     labels1 = np.where(labels > 0)
     labels0 = np.array(labels0).flatten()
     labels1 = np.array(labels1).flatten()
-    features0 = np.delete(features, labels1, axis=0)
-    features1 = np.delete(features, labels0, axis=0)
+    features0 = np.delete(train_features, labels1, axis=0)
+    features1 = np.delete(train_features, labels0, axis=0)
     mean_features0 = np.mean(features0, axis=0)
     mean_features1 = np.mean(features1, axis=0)
     std_features0 = np.std(features0, axis=0)
@@ -46,9 +47,10 @@ def fisher_idx(features, labels):
     # select fisher larger than 0.3
     fisher_threshold = 0.3
     feature_idx = np.where(fisher > fisher_threshold)
-    if (features[:, feature_idx].shape[2] < 3):
-        return sorted_feature_idx[:3]
-    return feature_idx
+    if (train_features[:, feature_idx].shape[2] < 3):
+        return train_features[:,sorted_feature_idx[:3]], test_features[:,sorted_feature_idx[:3]]
+    return train_features[:, feature_idx].reshape((train_features.shape[0], -1)), test_features[:, feature_idx].reshape((train_features.shape[0], -1))
+
 
 def delete_NAN(file_x):
     '''

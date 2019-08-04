@@ -15,8 +15,6 @@ import matplotlib.pyplot as plt
 from util import moving_average
 
 def extract_DWT_fea(data, level = 2, fs = 128):
-    b, a = signal.butter(2, 20 * 2 / fs, 'lowpass')
-    data = signal.filtfilt(b, a, data)
 
     features = []
     db4 = pywt.Wavelet('db4')
@@ -64,12 +62,12 @@ def extract_GSR_fea(GSR, fs, ampThresh = 1):
     tThreshLow = 0.1
     tThreshUp = 20
 
-    plt.subplot(411)
+    plt.subplot(211)
     plt.plot(np.arange(0,GSR.shape[0])/fs, GSR)
-    b, a = signal.butter(2, 1 * 2 / fs, 'lowpass')
-    GSR = signal.filtfilt(b, a, GSR)
-    GSR = signal.medfilt(GSR,61)
-    GSR = moving_average(GSR,61)
+    # b, a = signal.butter(2, 1 * 2 / fs, 'lowpass')
+    # GSR = signal.filtfilt(b, a, GSR)
+    # GSR = signal.medfilt(GSR,61)
+    # GSR = moving_average(GSR,61)
 
 
     #Search low and high peaks
@@ -79,13 +77,9 @@ def extract_GSR_fea(GSR, fs, ampThresh = 1):
     diff = moving_average(np.diff(GSR),50)
     dN = np.array(diff <= 0 ,dtype=int)
 
-    plt.subplot(412)
-    plt.plot(range(GSR.shape[0]),GSR)
-    # plt.plot(range(GSR.shape[0]),GSR)
-    plt.subplot(413)
-    plt.plot(range(np.diff(GSR).shape[0]),np.diff(GSR))
-    plt.subplot(414)
-    plt.plot(range(moving_average(np.diff(GSR), 50).shape[0]), moving_average(np.diff(GSR),50))
+    plt.subplot(212)
+    plt.plot(np.arange(0,GSR.shape[0])/fs, GSR)
+    # plt.show()
     dN = np.diff(dN)
     idxL = np.where(dN < 0)[0] + 1; #+1 to account for the double derivative
     idxH = np.where(dN > 0)[0] + 1;
@@ -152,7 +146,7 @@ def extract_GSR_fea(GSR, fs, ampThresh = 1):
 
 def extract_PPG_fea(PPGdata, fs = 128):
 
-    dataWindow = signal.medfilt(PPGdata, 3)
+    PPGdata = signal.medfilt(PPGdata, 3)
     b, a = signal.butter(2, [0.5  * 2/fs, 50 * 2/fs], 'bandpass')
     dataWindow = signal.filtfilt(b, a, PPGdata)
 
@@ -196,7 +190,7 @@ def extract_PPG_fea(PPGdata, fs = 128):
     # power_0-0.6
     freqs, power = getfreqs_power(dataWindow, fs, nperseg=dataWindow.size, scaling='spectrum')
     power_0_6 = []
-    for i in range(60):
+    for i in range(1,40):
         power_0_6.append(getBand_Power(freqs, power, lower=0 + (i * 0.1), upper=0.1 + (i * 0.1)))
     Power_0_6_fea = power_0_6
 
@@ -254,7 +248,7 @@ def extract_ECG_fea(ECGdata, fs = 128):
     # power_0-0.6
     freqs, power = getfreqs_power(dataWindow, fs, nperseg=dataWindow.size, scaling='spectrum')
     power_0_6 = []
-    for i in range(60):
+    for i in range(1,40):
         power_0_6.append(getBand_Power(freqs, power, lower=0 + (i * 0.1), upper=0.1 + (i * 0.1)))
     Power_0_6_fea = power_0_6
 
@@ -266,6 +260,21 @@ def extract_ECG_fea(ECGdata, fs = 128):
 
     return features
 
+def GSR_preprocess(GSR, fs):
+    b, a = signal.butter(2, 1 * 2 / fs, 'lowpass')
+    GSR = signal.filtfilt(b, a, GSR)
+    GSR = signal.medfilt(GSR, 61)
+    GSR = moving_average(GSR, 61)
+    return GSR
+
+def ST_preprocess(data,fs):
+    data = data - np.mean(data)
+    data[np.where(data > 0.15)] = 0
+    data[np.where(data < -0.15)] = 0
+    plt.plot(np.arange(0, data.shape[0]) / fs, data)
+    plt.subplot(212)
+    data = signal.medfilt(data, 11)
+    return data
 
 def test():
 

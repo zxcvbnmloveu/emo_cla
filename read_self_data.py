@@ -14,20 +14,20 @@ import matplotlib.pyplot as plt
 def myplot(data, fs = 134):
 
     plt.subplot(211)
-    data = data - np.mean(data)
-    data[np.where(data > 0.15)] = 0
-    data[np.where(data < -0.15)] = 0
+    # data = data - np.mean(data)
+    # data[np.where(data > 0.15)] = 0
+    # data[np.where(data < -0.15)] = 0
     plt.plot(np.arange(0,data.shape[0])/fs, data)
     plt.subplot(212)
-    data = signal.medfilt(data, 11)
+    # data = signal.medfilt(data, 11)
     # data = moving_average(data, 3)
     # b, a = signal.butter(2, 1 * 2 / fs, 'lowpass')
     # data = signal.filtfilt(b, a, data)
 
 
     f, Pxx_den = signal.welch(data, fs, nperseg=data.size)
-    # plt.plot(f,10*np.log10(Pxx_den))
-    plt.plot(np.arange(0,data.shape[0])/fs, data)
+    plt.plot(f,10*np.log10(Pxx_den))
+    # plt.plot(np.arange(0,data.shape[0])/fs, data)
 
     plt.show()
 
@@ -54,37 +54,22 @@ if __name__ == '__main__':
         label = np.append(label, emotion[i][4][0].reshape(-1))
 
     fs = 134
-    data1 = ST_data[1][0, :]
-    myplot(data1)
-    data2 = ST_data[41][0, :]
-    data3 = ST_data[112][0, :]
-    data4 = ST_data[222][0, :]
-    myplot(data2)
-    myplot(data3)
-    myplot(data4)
-
-    # myplot(data2)
-    # b, a = signal.butter(2, [0.5 * 2 / fs, 50 * 2 / fs], 'bandpass')
-    # dataWindow = signal.filtfilt(b, a, PPGdata)
-    # f, Pxx_den = signal.welch(data, fs, nperseg=data.size)
-    # plt.plot(f, 10* np.log10(Pxx_den))
-    # np.save('./data.npy', data)
 
 
-    # for i in range(len):
-    #     if i == 0:
-    #         PPG_fea = [extract_PPG_fea(PPG_data[i][0,:],fs=134)]
-    #     else:
-    #         PPG_fea.append(extract_PPG_fea(PPG_data[i][0,:],fs=134))
-    # PPG_fea = np.array(PPG_fea)
-    # print('PPG_fea.shape'+str(PPG_fea.shape))
-    #
-    # for i in range(len):
-    #     if i == 0:
-    #         GSR_fea = [extract_DWT_fea(GSR_data[i][0,:]) + extract_Temporal_fea(GSR_data[i][0,:])]
-    #     else:
-    #         GSR_fea.append(extract_DWT_fea(GSR_data[i][0,:]) + extract_Temporal_fea(GSR_data[i][0,:]))
-    # GSR_fea = np.array(GSR_fea)
+    for i in range(len):
+        if i == 0:
+            PPG_fea = [extract_PPG_fea(PPG_data[i][0,:],fs=134)]
+        else:
+            PPG_fea.append(extract_PPG_fea(PPG_data[i][0,:],fs=134))
+    PPG_fea = np.array(PPG_fea)
+    print('PPG_fea.shape'+str(PPG_fea.shape))
+    # 调用去噪
+    for i in range(len):
+        if i == 0:
+            GSR_fea = [extract_DWT_fea(GSR_data[i][0,:]) + extract_Temporal_fea(GSR_data[i][0,:])]
+        else:
+            GSR_fea.append(extract_DWT_fea(GSR_data[i][0,:]) + extract_Temporal_fea(GSR_data[i][0,:]))
+    GSR_fea = np.array(GSR_fea)
     # print('GSR_fea.shape'+str(GSR_fea.shape))
     #
     # for i in range(len):
